@@ -16,7 +16,7 @@ class Riot:
         self.api_key = api_key
 
     def getSummonerByName(self, name):
-        self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + api_key)
+        self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + self.api_key)
 
     def request(self, url):
         req = Request(url, None, {'User-agent': 'Firefox/3.05'})
