@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-class Summoner(Base):
+class Match(Base):
     __tablename__ = 'summoner'
 
     id = Column(Integer, primary_key=True)

@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from match import *
 
 Base = declarative_base()
 
@@ -16,7 +17,16 @@ class Riot:
         self.api_key = api_key
 
     def getSummonerByName(self, name):
-        self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + self.api_key)
+        response = self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + self.api_key)
+        json = response.read().decode('utf-8', errors='ignore')
+        summoner = json.loads(json)
+        return summoner
+
+    def getMatchHistory(self, summonerId):
+        response = self.request("https://na.api.pvp.net/api/lol/na/v2.2/matchhistory/" + summonerId + "?api_key=" + self.api_key)
+        json = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json)
+        return match
 
     def request(self, url):
         req = Request(url, None, {'User-agent': 'Firefox/3.05'})
@@ -31,8 +41,18 @@ class Riot:
 
     # Get the doctype from the headers
     def doctype(self, headers):
+
         match = re.search("content-type:\s*([\w/]+);", str(headers), re.IGNORECASE)
         try:
             return match.group(1)
         except:
             return None
+
+
+    def run(self):
+        summoner = self.getSummonerByName("chrispychips5")
+        summonerId = summoner["id"]
+        matchHistory = self.getMatchHistory(summonerId)
+        for match in matchHistory:
+
+
