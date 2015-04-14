@@ -1,10 +1,9 @@
 __author__ = 'Chris'
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
 
 Base = declarative_base()
 
@@ -17,17 +16,29 @@ class Summoner(Base):
     revisionDate = Column(Integer)
     summonerLevel = Column(Integer)
     winRate = Column(Integer)
+    matches = relationship("SummonerToMatch", backref="summoner")
 
 class Match(Base):
     __tablename__ = 'match'
+
     id = Column(Integer, primary_key=True)
+    mapId = Column(Integer)
+    creation = Column(Integer)
+    duration = Column(Integer)
+    mode = Column(String(250))
+    type = Column(String(250))
+    version = Column(String(250))
+    platformId = Column(String(250))
+    queueType = Column(String(250))
+    region = Column(String(250))
+    season = Column(String(250))
+    summoners = relationship("SummonerToMatch", backref="match")
 
 class SummonerToMatch(Base):
     __tablename__ = 'summoner_to_match'
     id = Column(Integer, primary_key=True)
-    summonerId = Column(Integer)
-    name = Column(String(20), nullable=False)#not sure how if you want to use summonerID or name
-    matchId = Column(Integer)
+    summonerId = Column(Integer, ForeignKey('summoner.id'))
+    matchId = Column(Integer, ForeignKey('match.id'))
     championId = Column(Integer)
     previousRank = Column(String(20))
     summonerSpell1 = Column(Integer)
@@ -45,7 +56,6 @@ class SummonerToChampion(Base):
     __tablename__ = 'summoner_to_champion'
     id = Column(Integer, primary_key=True)
     summonerId = Column(Integer)
-    name = Column(String(20), nullable=False)
     championId = Column(Integer)
     kills = Column(Integer)
     deaths = Column(Integer)

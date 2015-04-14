@@ -17,6 +17,7 @@ class Summoner(Base):
     profileIconId = Column(Integer)
     revisionDate = Column(Integer)
     summonerLevel = Column(Integer)
+    matches = relationship("Match")
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.

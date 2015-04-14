@@ -39,7 +39,7 @@ class Spider():
 
 
     # Create an engine that stores data in the local directory's
-# sqlalchemy_example.db file.
+    # sqlalchemy_example.db file.
 engine = create_engine("sqlite:///data.db")
 
 # A DBSession() instance establishes all conversations with the database
