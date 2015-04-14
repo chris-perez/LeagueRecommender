@@ -83,6 +83,7 @@ class SummonerToChampion(Base):
     id = Column(Integer, primary_key=True)
     summonerId = Column(Integer, ForeignKey('summoner.id'))
     championId = Column(Integer, ForeignKey('champion.id'))
+    champion = relationship("Champion", backref="summoner_assocs")
     kills = Column(Integer)
     deaths = Column(Integer)
     assists = Column(Integer)
