@@ -17,6 +17,7 @@ class Summoner(Base):
     summonerLevel = Column(Integer)
     winRate = Column(Integer)
     matches = relationship("SummonerToMatch", backref="summoner")
+    champions = relationship("SummonerToChampion", backref="summoner")
 
 class Match(Base):
     __tablename__ = 'match'
@@ -32,7 +33,6 @@ class Match(Base):
     queueType = Column(String(250))
     region = Column(String(250))
     season = Column(String(250))
-    summoners = relationship("SummonerToMatch", backref="match")
 
 class SummonerToMatch(Base):
     __tablename__ = 'summoner_to_match'
@@ -52,16 +52,42 @@ class SummonerToMatch(Base):
     towerKills = Column(Integer)
     winner = (String(5))
 
+class Champion(Base):
+    __tablename__ = 'champion'
+    id = Column(Integer, primary_key=True)
+    armor = Column(Float)
+    armorperlevel = Column(Float)
+    attackdamage = Column(Float)
+    attackdamageperlevel = Column(Float)
+    attackrange = Column(Float)
+    attackspeedoffset = Column(Float)
+    attackspeedperlevel = Column(Float)
+    crit = Column(Float)
+    critperlevel = Column(Float)
+    hp = Column(Float)
+    hpperlevel = Column(Float)
+    hpregen = Column(Float)
+    hpregenperlevel = Column(Float)
+    movespeed = Column(Float)
+    mp = Column(Float)
+    mpperlevel = Column(Float)
+    mpregen = Column(Float)
+    mpregenperlevel = Column(Float)
+    spellblock = Column(Float)
+    spellblockperlevel = Column(Float)
+    tags = Column(Float)
+
 class SummonerToChampion(Base):
     __tablename__ = 'summoner_to_champion'
     id = Column(Integer, primary_key=True)
-    summonerId = Column(Integer)
-    championId = Column(Integer)
+    summonerId = Column(Integer, ForeignKey('summoner.id'))
+    championId = Column(Integer, ForeignKey('champion.id'))
     kills = Column(Integer)
     deaths = Column(Integer)
     assists = Column(Integer)
     wins = Column(Integer)
     games = Column(Integer)
+
 
 
 # Create an engine that stores data in the local directory's

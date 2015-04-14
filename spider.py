@@ -4,8 +4,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
-from match import *
-from summoner import *
+from sqlalchemy_declarative import *
 
 
 class Spider():
