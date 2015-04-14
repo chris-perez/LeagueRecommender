@@ -12,7 +12,7 @@ Base = declarative_base()
 class Riot:
     api_key = "28b92f8a-f01b-4e6e-825f-5feed275ad7a"
 
-    def __init__(self, api_key):
+    def __init__(self, api_key="28b92f8a-f01b-4e6e-825f-5feed275ad7a"):
         self.api_key = api_key
 
     def getSummonerByName(self, name):
@@ -41,17 +41,8 @@ class Riot:
     # Get the doctype from the headers
     def doctype(self, headers):
 
-        match = re.search("content-type:\s*([\w/]+);", str(headers), re.IGNORECASE)
+        match = headers.search("content-type:\s*([\w/]+);", str(headers), re.IGNORECASE)
         try:
             return match.group(1)
         except:
             return None
-
-
-    def run(self):
-        summoner = self.getSummonerByName("chrispychips5")
-        summonerId = summoner["id"]
-        matchHistory = self.getMatchHistory(summonerId)
-        for match in matchHistory:
-
-

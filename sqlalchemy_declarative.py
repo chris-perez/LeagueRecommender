@@ -39,6 +39,7 @@ class SummonerToMatch(Base):
     id = Column(Integer, primary_key=True)
     summonerId = Column(Integer, ForeignKey('summoner.id'))
     matchId = Column(Integer, ForeignKey('match.id'))
+    match = relationship("Match", backref="summoner_assocs")
     championId = Column(Integer)
     previousRank = Column(String(20))
     summonerSpell1 = Column(Integer)
