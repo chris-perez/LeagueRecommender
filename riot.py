@@ -21,7 +21,19 @@ class Riot:
         summoner = json.loads(json)
         return summoner
 
+    def getMatch(self, matchId):
+        response = self.request("https://na.api.pvp.net//api/lol/na/v2.2/match/" + matchId + "?api_key=" + self.api_key)
+        json = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json)
+        return match
+
     def getMatchHistory(self, summonerId):
+        response = self.request("https://na.api.pvp.net/api/lol/na/v1.3/game/by-summoner/" + summonerId + "?api_key=" + self.api_key)
+        json = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json)
+        return match
+
+    def getRankedMatchHistory(self, summonerId):
         response = self.request("https://na.api.pvp.net/api/lol/na/v2.2/matchhistory/" + summonerId + "?api_key=" + self.api_key)
         json = response.read().decode('utf-8', errors='ignore')
         match = json.loads(json)

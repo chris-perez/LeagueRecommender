@@ -12,29 +12,34 @@ class Spider():
 
     def __init__(self):
         self.riot = Riot()
+        self.summonersToSearch = []
 
-    def parseMatch(self, match):
-        id = match['matchId']
+    def parseMatch(self, match, summonerId):
+        id = match['gameId']
         mapId = match['mapId']
-        creation = match['matchCreation']
-        duration = match['matchDuration']
-        mode = match['matchMode']
-        type = match['matchType']
-        version = match['matchVersion']
-        platformId = match['platformId']
-        queueType = match['queueType']
-        region = match['region']
-        season = match['season']
+        creation = match['createDate']
+        mode = match['gameMode']
+        type = match['subType']
 
-        m = Match(id=id, mapId=mapId, creation=creation, duration=duration, mode=mode, type=type, version=version, platformId=platformId, queueType=queueType, region=region, season=season)
-        for p in match['participantIdentities']:
-            summoner = self.parseSummoner(p['player']['summonerId'])
-            s2m = SummonerToMatch()
-            s2m.match = match
-            summoner.matches.append(s2m)
-            session.add(s2m)
-            if summoner not in session.query(Summoner).filter(Summoner.id.in_([summoner.id])).all():
-                session.add(summoner)
+        m = Match(id=id, mapId=mapId, creation=creation, mode=mode, type=type)
+
+        stats = match["stats"]
+        win = stats["win"]
+        champion = match["championId"]
+        kills = stats["championsKilled"]
+        deaths = stats["numDeaths"]
+        assists = stats["assists"]
+        summoner = Summoner(id=summonerId)
+        s2m = SummonerToMatch(win=win, kills=kills, deaths=deaths, assists=assists)
+        s2m.match = match
+        summoner.matches.append(s2m)
+        session.add(s2m)
+
+        for p in match["fellowPlayers"]:
+            self.summonersToSearch.append(p["summonerId"])
+
+        if summoner not in session.query(Summoner).filter(Summoner.id.in_([summoner.id])).all():
+            session.add(summoner)
         if session.query(Match).filter(Match.id.in_([m.id])).all()[0] is None:
             session.add(m)
         session.commit()
@@ -48,12 +53,18 @@ class Spider():
 
     def run(self):
         summoner = self.riot.getSummonerByName("chrispychips5")
-        summonerId = summoner["id"]
-        matchHistory = self.riot.getMatchHistory(summonerId)
-        for match in matchHistory:
-            self.parseMatch(match)
-
-
+        # my ID =  28866449
+        summonerId = summoner["chrispychips5"]["id"]
+        self.summonersToSearch.append(summonerId)
+        while len(self.summonersToSearch) > 0:
+            summonerId = self.summonersToSearch.pop(0)
+            matchHistory = self.riot.getMatchHistory(summonerId)["games"]
+            for match in matchHistory:
+                if match["gameType"] == "MATCHED_GAME":
+                    if(match["subType"] == "NORMAL" or match["subType"] == "NORMAL_3x3" or
+                        match["subType"] == "RANKED_SOLO_5x5" or match["subType"] == "RANKED_PREMADE_5x5" or
+                            match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
+                                self.parseMatch(match, summonerId)
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
