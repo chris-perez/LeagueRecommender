@@ -51,7 +51,7 @@ class SummonerToMatch(Base):
     firstBloodKill = Column(String(5))
     goldEarned = Column(Integer)
     towerKills = Column(Integer)
-    winner = (String(5))
+    winner = Column(String(5))
 
 class Champion(Base):
     __tablename__ = 'champion'
