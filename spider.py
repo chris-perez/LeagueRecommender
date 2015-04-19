@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy_declarative import *
 from riot import *
+import time
 
 
 class Spider():
@@ -21,50 +22,86 @@ class Spider():
         mode = match['gameMode']
         type = match['subType']
 
-        m = Match(id=id, mapId=mapId, creation=creation, mode=mode, type=type)
+        m = Match(matchId=id, mapId=mapId, creation=creation, mode=mode, type=type)
 
         stats = match["stats"]
         win = stats["win"]
         champion = match["championId"]
-        kills = stats["championsKilled"]
-        deaths = stats["numDeaths"]
-        assists = stats["assists"]
-        summoner = Summoner(id=summonerId)
-        s2m = SummonerToMatch(win=win, kills=kills, deaths=deaths, assists=assists)
-        s2m.match = match
+        if "championsKilled" in stats:
+            kills = stats["championsKilled"]
+        else:
+            kills = 0
+        if "numDeaths" in stats:
+            deaths = stats["numDeaths"]
+        else:
+            deaths = 0
+        if "assists" in stats:
+            assists = stats["assists"]
+        else:
+            assists = 0
+        summoner = Summoner(summonerId=summonerId)
+        s2m = SummonerToMatch(win=win, kills=kills, deaths=deaths, assists=assists, championId=champion)
+        s2m.match = m
         summoner.matches.append(s2m)
         session.add(s2m)
+
+        if len(session.query(Summoner).filter(SummonerToChampion.summonerId == summonerId, SummonerToChampion.championId == champion).all()) == 0:
+            s2c = SummonerToChampion(summonerId=summonerId, championId=champion, kills=kills, deaths=deaths, assists=assists, games=1)
+            if win:
+                s2c.wins = 1
+        else:
+            s2c = session.query(Summoner).filter(SummonerToChampion.summonerId == summonerId, SummonerToChampion.championId == champion).all()[0]
+            s2c.kills += kills
+            s2c.deaths += deaths
+            s2c.assists += assists
+            s2c.games += 1
+            if win:
+                s2c.wins += 1
+        summoner.champions.append(s2c)
+        session.add(s2c)
+
 
         for p in match["fellowPlayers"]:
             self.summonersToSearch.append(p["summonerId"])
 
-        if summoner not in session.query(Summoner).filter(Summoner.id.in_([summoner.id])).all():
+        if session.query(Summoner).filter(Summoner.summonerId.in_([summoner.summonerId])).all()[0] is None:
             session.add(summoner)
-        if session.query(Match).filter(Match.id.in_([m.id])).all()[0] is None:
+        if session.query(Match).filter(Match.matchId.in_([m.matchId])).all()[0] is None:
             session.add(m)
         session.commit()
 
     def parseSummoner(self, summoner):
         id = summoner['summonerId']
         name = summoner['summonerName']
-        s = Summoner(id=id, name=name)
+        s = Summoner(summonerId=id, name=name)
         return s
 
 
     def run(self):
         summoner = self.riot.getSummonerByName("chrispychips5")
+        time.sleep(1.2)
+        print(summoner)
         # my ID =  28866449
         summonerId = summoner["chrispychips5"]["id"]
         self.summonersToSearch.append(summonerId)
         while len(self.summonersToSearch) > 0:
             summonerId = self.summonersToSearch.pop(0)
+            print(summonerId)
             matchHistory = self.riot.getMatchHistory(summonerId)["games"]
+            time.sleep(1.2)
+            print(matchHistory)
+
             for match in matchHistory:
                 if match["gameType"] == "MATCHED_GAME":
                     if(match["subType"] == "NORMAL" or match["subType"] == "NORMAL_3x3" or
                         match["subType"] == "RANKED_SOLO_5x5" or match["subType"] == "RANKED_PREMADE_5x5" or
                             match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
                                 self.parseMatch(match, summonerId)
+
+
+def main():
+    spider = Spider()
+    spider.run()
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
@@ -79,3 +116,5 @@ engine = create_engine("sqlite:///data.db")
 # session.rollback()
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+main()
