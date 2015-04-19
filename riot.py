@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+import json
 
 Base = declarative_base()
 
@@ -17,26 +18,26 @@ class Riot:
 
     def getSummonerByName(self, name):
         response = self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + self.api_key)
-        json = response.read().decode('utf-8', errors='ignore')
-        summoner = json.loads(json)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        summoner = json.loads(json_as_str)
         return summoner
 
     def getMatch(self, matchId):
-        response = self.request("https://na.api.pvp.net//api/lol/na/v2.2/match/" + matchId + "?api_key=" + self.api_key)
-        json = response.read().decode('utf-8', errors='ignore')
-        match = json.loads(json)
+        response = self.request("https://na.api.pvp.net//api/lol/na/v2.2/match/" + str(matchId) + "?api_key=" + self.api_key)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json_as_str)
         return match
 
     def getMatchHistory(self, summonerId):
-        response = self.request("https://na.api.pvp.net/api/lol/na/v1.3/game/by-summoner/" + summonerId + "?api_key=" + self.api_key)
-        json = response.read().decode('utf-8', errors='ignore')
-        match = json.loads(json)
+        response = self.request("https://na.api.pvp.net/api/lol/na/v1.3/game/by-summoner/" + str(summonerId) + "/recent?api_key=" + self.api_key)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json_as_str)
         return match
 
     def getRankedMatchHistory(self, summonerId):
-        response = self.request("https://na.api.pvp.net/api/lol/na/v2.2/matchhistory/" + summonerId + "?api_key=" + self.api_key)
-        json = response.read().decode('utf-8', errors='ignore')
-        match = json.loads(json)
+        response = self.request("https://na.api.pvp.net/api/lol/na/v2.2/matchhistory/" + str(summonerId) + "?api_key=" + self.api_key)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        match = json.loads(json_as_str)
         return match
 
     def request(self, url):

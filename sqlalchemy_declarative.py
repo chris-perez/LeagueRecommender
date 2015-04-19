@@ -11,7 +11,8 @@ class Summoner(Base):
     __tablename__ = 'summoner'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(20), nullable=False)
+    summonerId = Column(Integer, nullable=False)
+    name = Column(String(20))
     profileIconId = Column(Integer)
     revisionDate = Column(Integer)
     summonerLevel = Column(Integer)
@@ -23,6 +24,7 @@ class Match(Base):
     __tablename__ = 'match'
 
     id = Column(Integer, primary_key=True)
+    matchId = Column(Integer, nullable=False)
     mapId = Column(Integer)
     creation = Column(Integer)
     duration = Column(Integer)
@@ -51,11 +53,12 @@ class SummonerToMatch(Base):
     firstBloodKill = Column(String(5))
     goldEarned = Column(Integer)
     towerKills = Column(Integer)
-    winner = Column(String(5))
+    win = Column(String(5))
 
 class Champion(Base):
     __tablename__ = 'champion'
     id = Column(Integer, primary_key=True)
+    championId = Column(Integer, nullable=False)
     armor = Column(Float)
     armorperlevel = Column(Float)
     attackdamage = Column(Float)
