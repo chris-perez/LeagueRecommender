@@ -40,6 +40,16 @@ class Spider():
         else:
             assists = 0
         summoner = Summoner(summonerId=summonerId)
+
+        if len(session.query(Summoner).filter(Summoner.summonerId == summonerId).all()) <= 0:
+            session.add(summoner)
+        else:
+            summoner = session.query(Summoner).filter(Summoner.summonerId == summonerId).all()[0]
+        if len(session.query(Match).filter(Match.matchId == m.matchId).all()) <= 0:
+            session.add(m)
+        else:
+            m = session.query(Match).filter(Match.matchId == m.matchId).all()[0]
+
         s2m = SummonerToMatch(win=win, kills=kills, deaths=deaths, assists=assists, championId=championId)
         s2m.match = m
         if len(session.query(SummonerToMatch).filter(SummonerToMatch.summonerId == summoner.id, SummonerToMatch.matchId == m.id).all()) <= 0:
@@ -65,10 +75,6 @@ class Spider():
             if p["summonerId"] != summonerId:
                 self.summonersToSearch.append(p["summonerId"])
 
-        if len(session.query(Summoner).filter(Summoner.summonerId == summonerId).all()) <= 0:
-            session.add(summoner)
-        if len(session.query(Match).filter(Match.matchId == match.matchId).all()) <= 0:
-            session.add(m)
         session.commit()
 
     def parseSummoner(self, summoner):
