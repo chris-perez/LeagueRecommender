@@ -63,7 +63,7 @@ class Spider():
             summoner.champions.append(s2c)
             session.add(s2c)
         else:
-            s2c = session.query(Summoner).filter(SummonerToChampion.summonerId == summonerId, SummonerToChampion.championId == championId).all()[0]
+            s2c = session.query(Summoner).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
             s2c.kills += kills
             s2c.deaths += deaths
             s2c.assists += assists
