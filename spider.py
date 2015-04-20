@@ -67,7 +67,7 @@ class Spider():
 
         if len(session.query(Summoner).filter(Summoner.summonerId == summonerId).all()) <= 0:
             session.add(summoner)
-        if len(session.query(Match).filter(Match.matchId == match.matchId).all()) <= 0:
+        if len(session.query(Match).filter(Match.matchId == m.matchId).all()) <= 0:
             session.add(m)
         session.commit()
 
