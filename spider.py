@@ -85,11 +85,11 @@ class Spider():
 
 
     def run(self):
-        summoner = self.riot.getSummonerByName("cannedsheep")
+        summoner = self.riot.getSummonerByName("chrispychips5")
         time.sleep(1.2)
         print(summoner)
         # my ID =  28866449
-        summonerId = summoner["cannedsheep"]["id"]
+        summonerId = summoner["chrispychips5"]["id"]
         self.summonersToSearch.append(summonerId)
         while len(self.summonersToSearch) > 0:
             summonerId = self.summonersToSearch.pop(0)
