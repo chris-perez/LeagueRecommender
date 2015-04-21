@@ -54,6 +54,7 @@ class SummonerToMatch(Base):
     goldEarned = Column(Integer)
     towerKills = Column(Integer)
     win = Column(String(5))
+    goodness = Column(Integer)
 
 class Champion(Base):
     __tablename__ = 'champion'
@@ -86,6 +87,8 @@ class Champion(Base):
     difficulty = Column(Integer)
     attack = Column(Integer)
 
+    avggoodness = Column(Integer)
+
     # tags = Column(Float)
 class SummonerToChampion(Base):
     __tablename__ = 'summoner_to_champion'
@@ -98,6 +101,7 @@ class SummonerToChampion(Base):
     assists = Column(Integer)
     wins = Column(Integer)
     games = Column(Integer)
+    goodness = Column(Integer)
 
 
 

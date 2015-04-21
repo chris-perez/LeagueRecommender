@@ -155,6 +155,13 @@ class Spider():
                             match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
                                 self.parseMatch(match, summonerId)
 
+# def math():
+#     kills=0
+#     assists=0
+#     towerKills=0
+#     deaths=1
+#     win = 1
+#     goodnes = log((kills + .75*assists + .5*towerKills)/deaths) + .1*win
 
 def main():
     spider = Spider()
