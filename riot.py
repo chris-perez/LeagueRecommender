@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+import time
 import json
 
 Base = declarative_base()
@@ -47,6 +48,7 @@ class Riot:
         return champs
 
     def request(self, url):
+        time.sleep(1.2)
         req = Request(url, None, {'User-agent': 'Firefox/3.05'})
         try:
             return urlopen(req)

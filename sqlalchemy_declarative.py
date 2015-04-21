@@ -58,6 +58,7 @@ class SummonerToMatch(Base):
 class Champion(Base):
     __tablename__ = 'champion'
     id = Column(Integer, primary_key=True)
+    name = Column(String(250))
     championId = Column(Integer, nullable=False)
     armor = Column(Float)
     armorperlevel = Column(Float)
