@@ -46,6 +46,12 @@ class Riot:
         match = json.loads(json_as_str)
         return match
 
+    def getChampionInfo(self):
+        response = self.request("https://global.api.pvp.net/api/lol/static-data/na/v1.2/champion?champData=info,stats,tags&api_key="+self.api_key)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        champs = json.loads(json_as_str)
+        return champs
+
     def request(self, url):
         req = Request(url, None, {'User-agent': 'Firefox/3.05'})
         try:
