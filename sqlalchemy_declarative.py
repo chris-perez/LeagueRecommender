@@ -79,8 +79,13 @@ class Champion(Base):
     mpregenperlevel = Column(Float)
     spellblock = Column(Float)
     spellblockperlevel = Column(Float)
-    tags = Column(Float)
 
+    defense = Column(Integer)
+    magic = Column(Integer)
+    difficulty = Column(Integer)
+    attack = Column(Integer)
+
+    # tags = Column(Float)
 class SummonerToChampion(Base):
     __tablename__ = 'summoner_to_champion'
     id = Column(Integer, primary_key=True)

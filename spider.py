@@ -80,6 +80,48 @@ class Spider():
 
         session.commit()
 
+    def parseChampions(self):
+        champions = self.riot.getChampionInfo()
+        for champ in champions["data"]:
+            championId = champ["data"]
+            armor = champ["data"]["armor"]
+            armorperlevel = champ["data"]["armorperlevel"]
+            attackdamage = champ["data"]["attackdamage"]
+            attackdamageperlevel = champ["id"]["attackdamageperlevel"]
+            attackrange = champ["data"]["attackrange"]
+            attackspeedoffset = champ["data"]["attackspeedoffset"]
+            attackspeedperlevel = champ["data"]["attackspeedperlevel"]
+            crit = champ["data"]["crit"]
+            critperlevel = champ["data"]["critperlevel"]
+            hp = champ["data"]["hp"]
+            hpperlevel = champ["data"]["hpperlevel"]
+            hpregen = champ["data"]["hpregen"]
+            hpregenperlevel = champ["data"]["hpregenperlevel"]
+            movespeed = champ["data"]["movespeed"]
+            mp = champ["data"]["mp"]
+            mpperlevel = champ["data"]["mpperlevel"]
+            mpregen = champ["data"]["mpregen"]
+            mpregenperlevel = champ["data"]["mpregenperlevel"]
+            spellblock = champ["data"]["spellblock"]
+            spellblockperlevel = champ["id"]["spellblockperlevel"]
+
+            defense = champ["info"]["defense"]
+            magic = champ["info"]["magic"]
+            difficulty = champ["info"]["difficulty"]
+            attack = champ["info"]["attack"]
+
+            # tags = champ["tags"]
+            if len(session.query(Champion).filter(Champion.championId == championId).all()) <= 0:
+                c = Champion(championId=championId, armor=armor, armorperlevel=armorperlevel, attackdamage=attackdamage,
+                             attackdamageperlevel=attackdamageperlevel, attackrange=attackrange, attackspeedoffset=attackspeedoffset,
+                             attackspeedperlevel=attackspeedperlevel, crit=crit, critperlevel=critperlevel, hp=hp,
+                             hpperlevel=hpperlevel, hpregen=hpregen, hpregenperlevel=hpregenperlevel, movespeed=movespeed, mp=mp,
+                             mpperlevel=mpperlevel, mpregen=mpregen, mpregenperlevel=mpregenperlevel, spellblock=spellblock,
+                             spellblockperlevel=spellblockperlevel, defense=defense, magic=magic, difficulty=difficulty, attack=attack)
+                session.add(c)
+                session.commit()
+
+
     def parseSummoner(self, summoner):
         id = summoner['summonerId']
         name = summoner['summonerName']
