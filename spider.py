@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy_declarative import *
 from riot import *
-import time
 
 
 class Spider():
@@ -83,32 +82,34 @@ class Spider():
     def parseChampions(self):
         champions = self.riot.getChampionInfo()
         for champ in champions["data"]:
-            championId = champ["data"]
-            armor = champ["data"]["armor"]
-            armorperlevel = champ["data"]["armorperlevel"]
-            attackdamage = champ["data"]["attackdamage"]
-            attackdamageperlevel = champ["id"]["attackdamageperlevel"]
-            attackrange = champ["data"]["attackrange"]
-            attackspeedoffset = champ["data"]["attackspeedoffset"]
-            attackspeedperlevel = champ["data"]["attackspeedperlevel"]
-            crit = champ["data"]["crit"]
-            critperlevel = champ["data"]["critperlevel"]
-            hp = champ["data"]["hp"]
-            hpperlevel = champ["data"]["hpperlevel"]
-            hpregen = champ["data"]["hpregen"]
-            hpregenperlevel = champ["data"]["hpregenperlevel"]
-            movespeed = champ["data"]["movespeed"]
-            mp = champ["data"]["mp"]
-            mpperlevel = champ["data"]["mpperlevel"]
-            mpregen = champ["data"]["mpregen"]
-            mpregenperlevel = champ["data"]["mpregenperlevel"]
-            spellblock = champ["data"]["spellblock"]
-            spellblockperlevel = champ["id"]["spellblockperlevel"]
+            c = champions["data"][champ]
+            name = champ
+            championId = c["id"]
+            armor = c["stats"]["armor"]
+            armorperlevel = c["stats"]["armorperlevel"]
+            attackdamage = c["stats"]["attackdamage"]
+            attackdamageperlevel = c["stats"]["attackdamageperlevel"]
+            attackrange = c["stats"]["attackrange"]
+            attackspeedoffset = c["stats"]["attackspeedoffset"]
+            attackspeedperlevel = c["stats"]["attackspeedperlevel"]
+            crit = c["stats"]["crit"]
+            critperlevel = c["stats"]["critperlevel"]
+            hp = c["stats"]["hp"]
+            hpperlevel = c["stats"]["hpperlevel"]
+            hpregen = c["stats"]["hpregen"]
+            hpregenperlevel = c["stats"]["hpregenperlevel"]
+            movespeed = c["stats"]["movespeed"]
+            mp = c["stats"]["mp"]
+            mpperlevel = c["stats"]["mpperlevel"]
+            mpregen = c["stats"]["mpregen"]
+            mpregenperlevel = c["stats"]["mpregenperlevel"]
+            spellblock = c["stats"]["spellblock"]
+            spellblockperlevel = c["stats"]["spellblockperlevel"]
 
-            defense = champ["info"]["defense"]
-            magic = champ["info"]["magic"]
-            difficulty = champ["info"]["difficulty"]
-            attack = champ["info"]["attack"]
+            defense = c["info"]["defense"]
+            magic = c["info"]["magic"]
+            difficulty = c["info"]["difficulty"]
+            attack = c["info"]["attack"]
 
             # tags = champ["tags"]
             if len(session.query(Champion).filter(Champion.championId == championId).all()) <= 0:
@@ -117,7 +118,8 @@ class Spider():
                              attackspeedperlevel=attackspeedperlevel, crit=crit, critperlevel=critperlevel, hp=hp,
                              hpperlevel=hpperlevel, hpregen=hpregen, hpregenperlevel=hpregenperlevel, movespeed=movespeed, mp=mp,
                              mpperlevel=mpperlevel, mpregen=mpregen, mpregenperlevel=mpregenperlevel, spellblock=spellblock,
-                             spellblockperlevel=spellblockperlevel, defense=defense, magic=magic, difficulty=difficulty, attack=attack)
+                             spellblockperlevel=spellblockperlevel, defense=defense, magic=magic, difficulty=difficulty, attack=attack,
+                             name=name)
                 session.add(c)
                 session.commit()
 
@@ -130,17 +132,20 @@ class Spider():
 
 
     def run(self):
-        summoner = self.riot.getSummonerByName("chrispychips5")
-        time.sleep(1.2)
-        print(summoner)
         # my ID =  28866449
-        summonerId = summoner["chrispychips5"]["id"]
-        self.summonersToSearch.append(summonerId)
+        names = ["chrispychips5", "frozenbastion", "begginstrips", "jumbone", "milkbone", "pupperoni", "spriteknight",
+                 "catmanavan", "demonecorvo", "happilymourning", "happyasreal", "kirbstomper", "mystletaynn",
+                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham"]
+        for name in names:
+            summoner = self.riot.getSummonerByName("chrispychips5")
+            print(summoner)
+            summonerId = summoner["chrispychips5"]["id"]
+            self.summonersToSearch.append(summonerId)
+
         while len(self.summonersToSearch) > 0:
             summonerId = self.summonersToSearch.pop(0)
             print(summonerId)
             matchHistory = self.riot.getMatchHistory(summonerId)["games"]
-            time.sleep(1.2)
             print(matchHistory)
 
             for match in matchHistory:
@@ -150,10 +155,18 @@ class Spider():
                             match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
                                 self.parseMatch(match, summonerId)
 
+# def math():
+#     kills=0
+#     assists=0
+#     towerKills=0
+#     deaths=1
+#     win = 1
+#     goodnes = log((kills + .75*assists + .5*towerKills)/deaths) + .1*win
 
 def main():
     spider = Spider()
-    spider.run()
+    spider.parseChampions()
+    # spider.run()
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
