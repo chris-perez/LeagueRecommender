@@ -135,7 +135,8 @@ class Spider():
         # my ID =  28866449
         names = ["chrispychips5", "frozenbastion", "begginstrips", "jumbone", "milkbone", "pupperoni", "spriteknight",
                  "catmanavan", "demonecorvo", "happilymourning", "happyasreal", "kirbstomper", "mystletaynn",
-                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep"]
+                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep", "laughing dead",
+                 "sintar", "gluck", "baskseven", "jabu jabu"]
         for name in names:
             summoner = self.riot.getSummonerByName(name)
             print(summoner)
