@@ -22,6 +22,12 @@ class Riot:
         summoner = json.loads(json_as_str)
         return summoner
 
+    def getSummonerById(self, summonerId):
+        response = self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/" + summonerId + "?api_key=" + self.api_key)
+        json_as_str = response.read().decode('utf-8', errors='ignore')
+        summoner = json.loads(json_as_str)
+        return summoner
+
     def getMatch(self, matchId):
         response = self.request("https://na.api.pvp.net//api/lol/na/v2.2/match/" + str(matchId) + "?api_key=" + self.api_key)
         json_as_str = response.read().decode('utf-8', errors='ignore')
