@@ -135,11 +135,11 @@ class Spider():
         # my ID =  28866449
         names = ["chrispychips5", "frozenbastion", "begginstrips", "jumbone", "milkbone", "pupperoni", "spriteknight",
                  "catmanavan", "demonecorvo", "happilymourning", "happyasreal", "kirbstomper", "mystletaynn",
-                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham"]
+                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep"]
         for name in names:
-            summoner = self.riot.getSummonerByName("chrispychips5")
+            summoner = self.riot.getSummonerByName(name)
             print(summoner)
-            summonerId = summoner["chrispychips5"]["id"]
+            summonerId = summoner[name]["id"]
             self.summonersToSearch.append(summonerId)
 
         while len(self.summonersToSearch) > 0:
