@@ -134,9 +134,9 @@ class Spider():
     def run(self):
         # my ID =  28866449
         names = ["chrispychips5", "frozenbastion", "begginstrips", "jumbone", "milkbone", "pupperoni", "spriteknight",
-                 "catmanavan", "demonecorvo", "happilymourning", "happyasreal", "kirbstomper", "mystletaynn",
-                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep", "laughing dead",
-                 "sintar", "gluck", "baskseven", "jabu jabu"]
+                 "catmanavan", "demonecorvo", "happilymourning", "kirbstomper", "mystletaynn",
+                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep",
+                 "sintar", "gluck", "baskseven", "laughingdead", "jabujabu"]
         for name in names:
             summoner = self.riot.getSummonerByName(name)
             print(summoner)
@@ -166,8 +166,8 @@ class Spider():
 
 def main():
     spider = Spider()
-    spider.parseChampions()
-    # spider.run()
+    # spider.parseChampions()
+    spider.run()
 
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
