@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy_declarative import *
 from riot import *
-import time
 
 
 class Spider():
@@ -45,6 +44,7 @@ class Spider():
             session.add(summoner)
         else:
             summoner = session.query(Summoner).filter(Summoner.summonerId == summonerId).all()[0]
+
         if len(session.query(Match).filter(Match.matchId == m.matchId).all()) <= 0:
             session.add(m)
         else:
@@ -56,14 +56,16 @@ class Spider():
             summoner.matches.append(s2m)
             session.add(s2m)
 
-        if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summonerId, SummonerToChampion.championId == championId).all()) <= 0:
+        if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()) <= 0:
             s2c = SummonerToChampion(summonerId=summonerId, championId=championId, kills=kills, deaths=deaths, assists=assists, games=1)
             if win:
                 s2c.wins = 1
+            else:
+                s2c.wins = 0
             summoner.champions.append(s2c)
             session.add(s2c)
         else:
-            s2c = session.query(Summoner).filter(SummonerToChampion.summonerId == summonerId, SummonerToChampion.championId == championId).all()[0]
+            s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
             s2c.kills += kills
             s2c.deaths += deaths
             s2c.assists += assists
@@ -77,6 +79,51 @@ class Spider():
 
         session.commit()
 
+    def parseChampions(self):
+        champions = self.riot.getChampionInfo()
+        for champ in champions["data"]:
+            c = champions["data"][champ]
+            name = champ
+            championId = c["id"]
+            armor = c["stats"]["armor"]
+            armorperlevel = c["stats"]["armorperlevel"]
+            attackdamage = c["stats"]["attackdamage"]
+            attackdamageperlevel = c["stats"]["attackdamageperlevel"]
+            attackrange = c["stats"]["attackrange"]
+            attackspeedoffset = c["stats"]["attackspeedoffset"]
+            attackspeedperlevel = c["stats"]["attackspeedperlevel"]
+            crit = c["stats"]["crit"]
+            critperlevel = c["stats"]["critperlevel"]
+            hp = c["stats"]["hp"]
+            hpperlevel = c["stats"]["hpperlevel"]
+            hpregen = c["stats"]["hpregen"]
+            hpregenperlevel = c["stats"]["hpregenperlevel"]
+            movespeed = c["stats"]["movespeed"]
+            mp = c["stats"]["mp"]
+            mpperlevel = c["stats"]["mpperlevel"]
+            mpregen = c["stats"]["mpregen"]
+            mpregenperlevel = c["stats"]["mpregenperlevel"]
+            spellblock = c["stats"]["spellblock"]
+            spellblockperlevel = c["stats"]["spellblockperlevel"]
+
+            defense = c["info"]["defense"]
+            magic = c["info"]["magic"]
+            difficulty = c["info"]["difficulty"]
+            attack = c["info"]["attack"]
+
+            # tags = champ["tags"]
+            if len(session.query(Champion).filter(Champion.championId == championId).all()) <= 0:
+                c = Champion(championId=championId, armor=armor, armorperlevel=armorperlevel, attackdamage=attackdamage,
+                             attackdamageperlevel=attackdamageperlevel, attackrange=attackrange, attackspeedoffset=attackspeedoffset,
+                             attackspeedperlevel=attackspeedperlevel, crit=crit, critperlevel=critperlevel, hp=hp,
+                             hpperlevel=hpperlevel, hpregen=hpregen, hpregenperlevel=hpregenperlevel, movespeed=movespeed, mp=mp,
+                             mpperlevel=mpperlevel, mpregen=mpregen, mpregenperlevel=mpregenperlevel, spellblock=spellblock,
+                             spellblockperlevel=spellblockperlevel, defense=defense, magic=magic, difficulty=difficulty, attack=attack,
+                             name=name)
+                session.add(c)
+                session.commit()
+
+
     def parseSummoner(self, summoner):
         id = summoner['summonerId']
         name = summoner['summonerName']
@@ -85,17 +132,21 @@ class Spider():
 
 
     def run(self):
-        summoner = self.riot.getSummonerByName("chrispychips5")
-        time.sleep(1.2)
-        print(summoner)
         # my ID =  28866449
-        summonerId = summoner["chrispychips5"]["id"]
-        self.summonersToSearch.append(summonerId)
+        names = ["chrispychips5", "frozenbastion", "begginstrips", "jumbone", "milkbone", "pupperoni", "spriteknight",
+                 "catmanavan", "demonecorvo", "happilymourning", "kirbstomper", "mystletaynn",
+                 "nignagpoliwag", "siegemaximo", "thisiscaptain", "wham", "cannedsheep",
+                 "sintar", "gluck", "baskseven", "laughingdead", "jabujabu"]
+        for name in names:
+            summoner = self.riot.getSummonerByName(name)
+            print(summoner)
+            summonerId = summoner[name]["id"]
+            self.summonersToSearch.append(summonerId)
+
         while len(self.summonersToSearch) > 0:
             summonerId = self.summonersToSearch.pop(0)
             print(summonerId)
             matchHistory = self.riot.getMatchHistory(summonerId)["games"]
-            time.sleep(1.2)
             print(matchHistory)
 
             for match in matchHistory:
@@ -105,9 +156,17 @@ class Spider():
                             match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
                                 self.parseMatch(match, summonerId)
 
+# def math():
+#     kills=0
+#     assists=0
+#     towerKills=0
+#     deaths=1
+#     win = 1
+#     goodnes = log((kills + .75*assists + .5*towerKills)/deaths) + .1*win
 
 def main():
     spider = Spider()
+    # spider.parseChampions()
     spider.run()
 
 # Create an engine that stores data in the local directory's
