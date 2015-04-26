@@ -56,22 +56,22 @@ class Spider():
             summoner.matches.append(s2m)
             session.add(s2m)
 
-        if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()) <= 0:
-            s2c = SummonerToChampion(summonerId=summonerId, championId=championId, kills=kills, deaths=deaths, assists=assists, games=1)
-            if win:
-                s2c.wins = 1
+            if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()) <= 0:
+                s2c = SummonerToChampion(summonerId=summonerId, championId=championId, kills=kills, deaths=deaths, assists=assists, games=1)
+                if win:
+                    s2c.wins = 1
+                else:
+                    s2c.wins = 0
+                summoner.champions.append(s2c)
+                session.add(s2c)
             else:
-                s2c.wins = 0
-            summoner.champions.append(s2c)
-            session.add(s2c)
-        else:
-            s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
-            s2c.kills += kills
-            s2c.deaths += deaths
-            s2c.assists += assists
-            s2c.games += 1
-            if win:
-                s2c.wins += 1
+                s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
+                s2c.kills += kills
+                s2c.deaths += deaths
+                s2c.assists += assists
+                s2c.games += 1
+                if win:
+                    s2c.wins += 1
 
         for p in match["fellowPlayers"]:
             if p["summonerId"] != summonerId:
