@@ -56,22 +56,22 @@ class Spider():
             summoner.matches.append(s2m)
             session.add(s2m)
 
-        if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()) <= 0:
-            s2c = SummonerToChampion(summonerId=summonerId, championId=championId, kills=kills, deaths=deaths, assists=assists, games=1)
-            if win:
-                s2c.wins = 1
+            if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()) <= 0:
+                s2c = SummonerToChampion(summonerId=summonerId, championId=championId, kills=kills, deaths=deaths, assists=assists, games=1)
+                if win:
+                    s2c.wins = 1
+                else:
+                    s2c.wins = 0
+                summoner.champions.append(s2c)
+                session.add(s2c)
             else:
-                s2c.wins = 0
-            summoner.champions.append(s2c)
-            session.add(s2c)
-        else:
-            s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
-            s2c.kills += kills
-            s2c.deaths += deaths
-            s2c.assists += assists
-            s2c.games += 1
-            if win:
-                s2c.wins += 1
+                s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == championId).all()[0]
+                s2c.kills += kills
+                s2c.deaths += deaths
+                s2c.assists += assists
+                s2c.games += 1
+                if win:
+                    s2c.wins += 1
 
         for p in match["fellowPlayers"]:
             if p["summonerId"] != summonerId:
@@ -123,6 +123,26 @@ class Spider():
                 session.add(c)
                 session.commit()
 
+    def makeSummonerToChampTable(self):
+        for summoner in session.query(Summoner).all():
+            for match in session.query(SummonerToMatch).filter(SummonerToMatch.summonerId == summoner.id).all():
+                if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == match.summonerId, SummonerToChampion.championId == match.championId).all()) <= 0:
+                    s2c = SummonerToChampion(summonerId=match.summonerId, championId=match.championId, kills=match.kills, deaths=match.deaths, assists=match.assists, games=1)
+                    if match.win > 0:
+                        s2c.wins = 1
+                    else:
+                        s2c.wins = 0
+                    summoner.champions.append(s2c)
+                    session.add(s2c)
+                else:
+                    s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == match.championId).all()[0]
+                    s2c.kills += match.kills
+                    s2c.deaths += match.deaths
+                    s2c.assists += match.assists
+                    s2c.games += 1
+                    if match.win > 0:
+                        s2c.wins += 1
+        return
 
     def parseSummoner(self, summoner):
         id = summoner['summonerId']
@@ -156,19 +176,21 @@ class Spider():
                             match["subType"] == "RANKED_TEAM_5x5" or match["subType"] == "RANKED_TEAM_3x3"):
                                 self.parseMatch(match, summonerId)
 
+
+
 # def math():
 #     kills=0
 #     assists=0
 #     towerKills=0
 #     deaths=1
 #     win = 1
-#     goodnes = log((kills + .75*assists + .5*towerKills)/deaths) + .1*win
+#     goodness = log((kills + .75*assists + .5*towerKills)/deaths) + .1*win
 
 def main():
     spider = Spider()
     # spider.parseChampions()
-    spider.run()
-
+    # spider.run()
+    spider.makeSummonerToChampTable()
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
 engine = create_engine("sqlite:///data.db")
