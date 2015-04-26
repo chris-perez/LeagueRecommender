@@ -125,22 +125,24 @@ class Spider():
 
     def makeSummonerToChampTable(self):
         for summoner in session.query(Summoner).all():
+            print("Summoner Id: " + str(summoner.id))
             for match in session.query(SummonerToMatch).filter(SummonerToMatch.summonerId == summoner.id).all():
                 if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == match.summonerId, SummonerToChampion.championId == match.championId).all()) <= 0:
                     s2c = SummonerToChampion(summonerId=match.summonerId, championId=match.championId, kills=match.kills, deaths=match.deaths, assists=match.assists, games=1)
-                    if match.win > 0:
+                    if int(match.win) > 0:
                         s2c.wins = 1
                     else:
                         s2c.wins = 0
                     summoner.champions.append(s2c)
                     session.add(s2c)
+                    session.commit()
                 else:
                     s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == match.championId).all()[0]
                     s2c.kills += match.kills
                     s2c.deaths += match.deaths
                     s2c.assists += match.assists
                     s2c.games += 1
-                    if match.win > 0:
+                    if int(match.win) > 0:
                         s2c.wins += 1
         return
 
