@@ -191,8 +191,8 @@ class Spider():
 def main():
     spider = Spider()
     # spider.parseChampions()
-    # spider.run()
-    spider.makeSummonerToChampTable()
+    spider.run()
+    # spider.makeSummonerToChampTable()
 # Create an engine that stores data in the local directory's
 # sqlalchemy_example.db file.
 engine = create_engine("sqlite:///data.db")
