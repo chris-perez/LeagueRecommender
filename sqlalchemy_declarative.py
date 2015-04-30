@@ -36,6 +36,7 @@ class Match(Base):
     region = Column(String(250))
     season = Column(String(250))
 
+
 class SummonerToMatch(Base):
     __tablename__ = 'summoner_to_match'
     id = Column(Integer, primary_key=True)
