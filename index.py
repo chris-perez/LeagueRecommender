@@ -14,7 +14,7 @@ class Index():
         i = 0
         for summoner in session.query(Summoner).all():
             # number of test champions
-            if i > 50:
+            if i > 30:
                 break
             i += 1
             self.idx[summoner.summonerId] = dict()
@@ -62,7 +62,7 @@ class Index():
     # def summonerSimilarity(self, s1, s2):
 
     def champSuggestionByChampion(self, summonerId):
-        # print(self.idx[summonerId])
+        print(self.idx[summonerId])
         temp = sorted(self.idx[summonerId].items(), key=operator.itemgetter(1))
         top3_champs = []
         print("Your Top 3 Champions: ")
@@ -77,11 +77,14 @@ class Index():
         print("Your Top 3 Recommendations: ")
         for champ in top3_champs:
             temp = sorted(self.c2c[champ].items(), key=operator.itemgetter(1), reverse=True)
-            if(self.idx[summonerId][temp[0][0]] == 0):
-                top3_recommendations.append(temp[0][0])
-                print("\tName: " + session.query(Champion).filter(Champion.championId == temp[0][0]).all()[0].name)
-                print("\t\tChampion id: " + str(temp[0][0]))
-                print("\t\tScore: " + str(temp[0][1]))
+            # print(temp)
+            for i in range(0, len(temp)):
+                if self.idx[summonerId][temp[i][0]] == 0:
+                    top3_recommendations.append(temp[0][0])
+                    print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
+                    print("\t\tChampion id: " + str(temp[i][0]))
+                    print("\t\tScore: " + str(temp[i][1]))
+                    break
 
 
 
