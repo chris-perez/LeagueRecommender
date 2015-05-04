@@ -3,12 +3,13 @@ from riot import *
 from sqlalchemy_declarative import *
 import math
 import operator
+import operator
 import pickle
 import os
 
 
 class Index():
-    def __init__(self, normalize):
+    def __init__(self, normalize=False):
         self.riot = Riot()
         self.idx = dict()
         self.s2s = dict()
