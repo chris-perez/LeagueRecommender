@@ -8,16 +8,20 @@ import os
 
 
 class Index():
-    def __init__(self):
+    def __init__(self, normalize):
         self.riot = Riot()
         self.idx = dict()
         self.s2s = dict()
         self.c2c = dict()
         i = 0
-        if os.path.exists("index.p"):
+        if normalize and os.path.exists("indexN.p"):
+            self.idx = pickle.load(open("indexN.p", "rb"))
+        elif (not normalize) and os.path.exists("index.p"):
             self.idx = pickle.load(open("index.p", "rb"))
         else:
+            print("Loading Index . . .")
             for summoner in session.query(Summoner).all():
+                totalScore = 0
                 # number of test champions
                 if i > 600:
                     break
@@ -26,7 +30,7 @@ class Index():
                 for champion in session.query(Champion).all():
                     if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()) > 0:
                         s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()[0]
-                        print("Summoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
+                        print("\tSummoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
                         if s2c.deaths > 0:
                             #normalize = goodness/sum of goodness
                             goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
@@ -45,34 +49,56 @@ class Index():
                         self.idx[summoner.summonerId][champion.championId] = s2c.goodness
                     else:
                         self.idx[summoner.summonerId][champion.championId] = 0
+                    totalScore += self.idx[summoner.summonerId][champion.championId]
+                if normalize:
+                    for score in self.idx[summoner.summonerId]:
+                        score /= totalScore
+
                 self.s2s[summoner.summonerId] = dict()
-            pickle.dump(self.idx, open("index.p", "wb"))
+            if normalize:
+                pickle.dump(self.idx, open("indexN.p", "wb"))
+            else:
+                pickle.dump(self.idx, open("index.p", "wb"))
 
         # Summoner to Summoner similarity
-        if os.path.exists("s2s.p"):
-            self.s2s = pickle.load(open("s2s.p", "rb"))
-        else:
-            for s1 in self.s2s.keys():
-                for s2 in self.s2s.keys():
-                    # s1[s2] = 0
-                    total = 0
-                    for champion in session.query(Champion).all():
-                        total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
-                    self.s2s[s1][s2] = total
-            pickle.dump(self.s2s, open("s2s.p", "wb"))
+        # if normalize and os.path.exists("s2sN.p"):
+        #     self.s2s = pickle.load(open("s2sN.p", "rb"))
+        # if (not normalize) and os.path.exists("s2s.p"):
+        #     self.s2s = pickle.load(open("s2s.p", "rb"))
+        # else:
+        #     print("Loading Summoner Similarity Table . . .")
+        #     for s1 in self.s2s.keys():
+        #         print("\tSummoner ID: " + str(s1))
+        #         for s2 in self.s2s.keys():
+        #             # s1[s2] = 0
+        #             total = 0
+        #             for champion in session.query(Champion).all():
+        #                 total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
+        #             self.s2s[s1][s2] = total
+        #     if normalize:
+        #         pickle.dump(self.s2s, open("s2sN.p", "wb"))
+        #     else:
+        #         pickle.dump(self.s2s, open("s2s.p", "wb"))
 
         # Champion to Champion similarity
-        if os.path.exists("c2c.p"):
+        if normalize and os.path.exists("c2cN.p"):
+            self.c2c = pickle.load(open("c2cN.p", "rb"))
+        elif (not normalize) and os.path.exists("c2c.p"):
             self.c2c = pickle.load(open("c2c.p", "rb"))
         else:
+            print("Loading Champion Similarity Table . . .")
             for c1 in session.query(Champion).all():
+                print("\tChampion ID: " + str(c1.championId))
                 self.c2c[c1.championId] = dict()
                 for c2 in session.query(Champion).all():
                     total = 0
-                    for summoner in self.s2s.keys():
+                    for summoner in self.idx.keys():
                         total += self.idx[summoner][c1.championId] * self.idx[summoner][c2.championId]
                     self.c2c[c1.championId][c2.championId] = total
-            pickle.dump(self.c2c, open("c2c.p", "wb"))
+            if normalize:
+                pickle.dump(self.c2c, open("c2cN.p", "wb"))
+            else:
+                pickle.dump(self.c2c, open("c2c.p", "wb"))
 
     # def summonerSimilarity(self, s1, s2):
 
@@ -122,7 +148,12 @@ def main():
     index = Index()
     while (True):
         name = input("Enter a summoner name: ")
-        summonerId = index.riot.getSummonerByName(name)[name]["id"]
+        summoner = index.riot.getSummonerByName(name)
+        if summoner == -1:
+            print("Summoner does not exist on NA Server")
+            continue
+        summonerId = summoner[name]["id"]
+
         # My ID: 28866449
         index.champSuggestionByChampion(summonerId)
     # index.setGoodness()
