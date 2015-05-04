@@ -19,6 +19,7 @@ class Riot:
 
     def getSummonerByName(self, name):
         response = self.request("https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/" + name + "?api_key=" + self.api_key)
+        print(response)
         json_as_str = response.read().decode('utf-8', errors='ignore')
         summoner = json.loads(json_as_str)
         return summoner

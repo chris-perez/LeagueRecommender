@@ -3,6 +3,8 @@ from riot import *
 from sqlalchemy_declarative import *
 import math
 import operator
+import pickle
+import os
 
 
 class Index():
@@ -12,56 +14,72 @@ class Index():
         self.s2s = dict()
         self.c2c = dict()
         i = 0
-        for summoner in session.query(Summoner).all():
-            # number of test champions
-            if i > 30:
-                break
-            i += 1
-            self.idx[summoner.summonerId] = dict()
-            for champion in session.query(Champion).all():
-                if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()) > 0:
-                    s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()[0]
-                    print("Summoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
-                    if s2c.deaths > 0:
-                        #normalize = goodness/sum of goodness
-                        goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
-                        if(goodness > 0):
-                            s2c.goodness = math.log10(goodness)
-                        else:
-                            s2c.goodness = 0
-                    else:
-                        goodness = (((s2c.kills + .75 * s2c.assists) / 1) + .1*s2c.wins)/s2c.games
-                        if(goodness > 0):
-                            s2c.goodness = math.log10(goodness)
-                        else:
-                            s2c.goodness = 0
-
-                    session.commit()
-                    self.idx[summoner.summonerId][champion.championId] = s2c.goodness
-                else:
-                    self.idx[summoner.summonerId][champion.championId] = 0
-            self.s2s[summoner.summonerId] = dict()
-        # Summoner to Summoner similarity
-        for s1 in self.s2s.keys():
-            for s2 in self.s2s.keys():
-                # s1[s2] = 0
-                total = 0
+        if os.path.exists("index.p"):
+            self.idx = pickle.load(open("index.p", "rb"))
+        else:
+            for summoner in session.query(Summoner).all():
+                # number of test champions
+                if i > 600:
+                    break
+                i += 1
+                self.idx[summoner.summonerId] = dict()
                 for champion in session.query(Champion).all():
-                    total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
-                self.s2s[s1][s2] = total
+                    if len(session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()) > 0:
+                        s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()[0]
+                        print("Summoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
+                        if s2c.deaths > 0:
+                            #normalize = goodness/sum of goodness
+                            goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
+                            if(goodness > 0):
+                                s2c.goodness = math.log10(goodness)
+                            else:
+                                s2c.goodness = 0
+                        else:
+                            goodness = (((s2c.kills + .75 * s2c.assists) / 1) + .1*s2c.wins)/s2c.games
+                            if(goodness > 0):
+                                s2c.goodness = math.log10(goodness)
+                            else:
+                                s2c.goodness = 0
+
+                        session.commit()
+                        self.idx[summoner.summonerId][champion.championId] = s2c.goodness
+                    else:
+                        self.idx[summoner.summonerId][champion.championId] = 0
+                self.s2s[summoner.summonerId] = dict()
+            pickle.dump(self.idx, open("index.p", "wb"))
+
+        # Summoner to Summoner similarity
+        if os.path.exists("s2s.p"):
+            self.s2s = pickle.load(open("s2s.p", "rb"))
+        else:
+            for s1 in self.s2s.keys():
+                for s2 in self.s2s.keys():
+                    # s1[s2] = 0
+                    total = 0
+                    for champion in session.query(Champion).all():
+                        total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
+                    self.s2s[s1][s2] = total
+            pickle.dump(self.s2s, open("s2s.p", "wb"))
 
         # Champion to Champion similarity
-        for c1 in session.query(Champion).all():
-            self.c2c[c1.championId] = dict()
-            for c2 in session.query(Champion).all():
-                total = 0
-                for summoner in self.s2s.keys():
-                    total += self.idx[summoner][c1.championId] * self.idx[summoner][c2.championId]
-                self.c2c[c1.championId][c2.championId] = total
+        if os.path.exists("c2c.p"):
+            self.c2c = pickle.load(open("c2c.p", "rb"))
+        else:
+            for c1 in session.query(Champion).all():
+                self.c2c[c1.championId] = dict()
+                for c2 in session.query(Champion).all():
+                    total = 0
+                    for summoner in self.s2s.keys():
+                        total += self.idx[summoner][c1.championId] * self.idx[summoner][c2.championId]
+                    self.c2c[c1.championId][c2.championId] = total
+            pickle.dump(self.c2c, open("c2c.p", "wb"))
 
     # def summonerSimilarity(self, s1, s2):
 
     def champSuggestionByChampion(self, summonerId):
+        if summonerId not in self.idx:
+            print("Can't find summoner in table.")
+            return
         print(self.idx[summonerId])
         temp = sorted(self.idx[summonerId].items(), key=operator.itemgetter(1))
         top3_champs = []
@@ -77,7 +95,7 @@ class Index():
         print("Your Top 3 Recommendations: ")
         for champ in top3_champs:
             temp = sorted(self.c2c[champ].items(), key=operator.itemgetter(1), reverse=True)
-            # print(temp)
+            # print(temp60)
             for i in range(0, len(temp)):
                 if self.idx[summonerId][temp[i][0]] == 0:
                     top3_recommendations.append(temp[0][0])
