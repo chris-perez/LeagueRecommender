@@ -3,13 +3,12 @@ from riot import *
 from sqlalchemy_declarative import *
 import math
 import operator
-import operator
 import pickle
 import os
 
 
 class Index():
-    def __init__(self, normalize=False):
+    def __init__(self, normalize=False, champByStats=False):
         self.riot = Riot()
         self.idx = dict()
         self.s2s = dict()
@@ -55,31 +54,31 @@ class Index():
                     for score in self.idx[summoner.summonerId]:
                         score /= totalScore
 
-                self.s2s[summoner.summonerId] = dict()
             if normalize:
                 pickle.dump(self.idx, open("indexN.p", "wb"))
             else:
                 pickle.dump(self.idx, open("index.p", "wb"))
 
         # Summoner to Summoner similarity
-        # if normalize and os.path.exists("s2sN.p"):
-        #     self.s2s = pickle.load(open("s2sN.p", "rb"))
-        # if (not normalize) and os.path.exists("s2s.p"):
-        #     self.s2s = pickle.load(open("s2s.p", "rb"))
-        # else:
-        #     print("Loading Summoner Similarity Table . . .")
-        #     for s1 in self.s2s.keys():
-        #         print("\tSummoner ID: " + str(s1))
-        #         for s2 in self.s2s.keys():
-        #             # s1[s2] = 0
-        #             total = 0
-        #             for champion in session.query(Champion).all():
-        #                 total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
-        #             self.s2s[s1][s2] = total
-        #     if normalize:
-        #         pickle.dump(self.s2s, open("s2sN.p", "wb"))
-        #     else:
-        #         pickle.dump(self.s2s, open("s2s.p", "wb"))
+        if normalize and os.path.exists("s2sN.p"):
+            self.s2s = pickle.load(open("s2sN.p", "rb"))
+        elif (not normalize) and os.path.exists("s2s.p"):
+            self.s2s = pickle.load(open("s2s.p", "rb"))
+        else:
+            print("Loading Summoner Similarity Table . . .")
+            for s1 in self.idx.keys():
+                self.s2s[s1] = dict()
+                print("\tSummoner ID: " + str(s1))
+                for s2 in self.idx.keys():
+                    # s1[s2] = 0
+                    total = 0
+                    for champion in session.query(Champion).all():
+                        total += self.idx[s1][champion.championId] * self.idx[s2][champion.championId]
+                    self.s2s[s1][s2] = total
+            if normalize:
+                pickle.dump(self.s2s, open("s2sN.p", "wb"))
+            else:
+                pickle.dump(self.s2s, open("s2s.p", "wb"))
 
         # Champion to Champion similarity
         if normalize and os.path.exists("c2cN.p"):
@@ -100,8 +99,17 @@ class Index():
                 pickle.dump(self.c2c, open("c2cN.p", "wb"))
             else:
                 pickle.dump(self.c2c, open("c2c.p", "wb"))
-
-    # def summonerSimilarity(self, s1, s2):
+        if champByStats:
+            print("Loading Champion Similarity Table . . .")
+            for c1 in session.query(Champion).all():
+                for c2 in session.query(Champion).all():
+                    if normalize:
+                        total1 = c1.defense + c1.magic + c1.attack
+                        total2 = c2.defense + c2.magic + c2.attack
+                        total = (c1.defense/total1)*(c2.defense/total2) + (c1.magic/total1)*(c2.magic/total2) + (c1.attack/total1)*(c2.attack/total2)
+                    else:
+                        total = c1.defense*c2.defense + c1.magic*c2.magic + c1.attack*c2.attack
+                    self.c2c[c1.championId][c2.championId] += total
 
     def champSuggestionByChampion(self, summonerId):
         if summonerId not in self.idx:
@@ -122,10 +130,10 @@ class Index():
         print("Your Top 3 Recommendations: ")
         for champ in top3_champs:
             temp = sorted(self.c2c[champ].items(), key=operator.itemgetter(1), reverse=True)
-            # print(temp60)
+            # print(temp)
             for i in range(0, len(temp)):
                 if self.idx[summonerId][temp[i][0]] == 0:
-                    top3_recommendations.append(temp[0][0])
+                    top3_recommendations.append(temp[i][0])
                     print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
                     print("\t\tChampion id: " + str(temp[i][0]))
                     print("\t\tScore: " + str(temp[i][1]))
@@ -133,20 +141,36 @@ class Index():
 
 
 
-        # for summoner in self.s2s[summonerId].keys():
-        #     if self.s2s[summonerId][summoner] > self.s2s[summonerId][mostSimilarSummoner]:
-        #         mostSimilarSummoner = summoner
-
-
     def champSuggestionBySummoner(self, summonerId):
-        mostSimilarSummoner = self.s2s[summonerId].keys()[0]
-        for summoner in self.s2s[summonerId].keys():
-            if self.s2s[summonerId][summoner] > self.s2s[summonerId][mostSimilarSummoner]:
-                mostSimilarSummoner = summoner
+        if summonerId not in self.idx:
+            print("Can't find summoner in table.")
+            return
+        print(self.idx[summonerId])
+        temp = sorted(self.s2s[summonerId].items(), key=operator.itemgetter(1))
+        top3_summoners = []
+        print("Your Top 3 Summoners: ")
+        for i in range(0, 3):
+            if i > len(self.s2s[summonerId]) or self.s2s[summonerId][temp[i][0]] == 0:
+                break
+            top3_summoners.append(temp[i][0])
+            print("\tSummoner id: " + str(top3_summoners[i]))
+
+        top3_recommendations = []
+        print("Your Top 3 Recommendations: ")
+        for summoner in top3_summoners:
+            temp = sorted(self.idx[summoner].items(), key=operator.itemgetter(1), reverse=True)
+            # print(temp)
+            for i in range(0, len(temp)):
+                if self.idx[summonerId][temp[i][0]] == 0:
+                    top3_recommendations.append(temp[i][0])
+                    print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
+                    print("\t\tChampion id: " + str(temp[i][0]))
+                    print("\t\tScore: " + str(temp[i][1]))
+                    break
 
 
 def main():
-    index = Index()
+    index = Index(False, False)
     while (True):
         name = input("Enter a summoner name: ")
         summoner = index.riot.getSummonerByName(name)
@@ -156,7 +180,11 @@ def main():
         summonerId = summoner[name]["id"]
 
         # My ID: 28866449
+        print("Suggestion by Champion to Champion Similarity")
         index.champSuggestionByChampion(summonerId)
+        print("Suggestion by Summoner to Summoner Similarity")
+        index.champSuggestionBySummoner(summonerId)
+
     # index.setGoodness()
 
 
