@@ -1,9 +1,8 @@
 __author__ = 'Chris'
 from index import *
-from WebDB import *
-from ranked_search import *
 from random import randint
-from random import shuffle
+from index import *
+
 
 
 def avgPrecision(relevance):
@@ -36,6 +35,8 @@ def rPrecision(relevance):
 def nPrecision(relevance, N=10):
     total_relevant = 0
     for i in range(0, N):
+        if i >= len(relevance):
+            break
         if relevance[i]:
             total_relevant += 1
     relevant_to_r = 0
@@ -71,35 +72,50 @@ def areaUnderCurve(relevance):
     return area
 
 
-
-
 def main():
-    db = WebDB("data/cache.db")
-    print("Enter document weighting scheme: ")
-    doc_weight = input()
-    print("Enter query weighting scheme: ")
-    query_weight = input()
-
     print("Loading Index . . .")
-    idx = Index(db, doc_weight)
+    idx = Index(True, True)
     print("Index Loaded")
-    rs = RankedSearch(db, idx, query_weight)
 
-    items = db.execute("select * from Item").fetchall()
+    s2cRelavance = dict()
+    summonerResponses = {
+        "chrispychips5": [0,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,1,1,1,0,1,1,1,0,1,1,0,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,1,0,1,1,1,0,1,1,1,1,1],
+        "frozenbastion": [0,0,0,1,1,1,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,1,1,0,1,0,0,0,0,1,1,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,0,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,0,1,1,0,0,0,0,0,1,1,0],
+        "milkbone": [0,0,0,1,1,1,0,0,0,0,1,0,1,0,0,0,0,1,1,0,0,0,0,1,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+        "pupperoni": [0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,1,0,1,0,1,0,0,0,0,0,1,1,0,1,1,1,1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,0,0,1,0,0,1],
+        "spriteknight": [0,0,0,1,1,0,0,0,0,1,1,1,1,0,0,1,0,0,0,1,1,0,0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,1,0,0,1,0,1,1,0,1,0,0,1,0,0,0,1,1,1,0,1,1,0,1,0,1,1,1,1,1,1,1,0,0,1,0,1,0,0,0,1,1,1,0,0,0,0,1,0,0,0,1,1,0,0,1,1,1,0,0,1,1,1,0,1,0,1,0,0,1,0,0,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0],
+        "happilymourning": [1,1,0,1,1,0,1,1,0,1,1,1,1,1,1,0,1,0,1,0,1,0,0,1,1,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,1,1,1,0,0,0,1,0,1,1,1,0,1,0,1,1,1,0,0,0,0,1,0,0,1,1,0,1,0,0,0,0,1,1,0,1,0,1,0,1,0,0,1,1,0,0,0,0,0,1,0,1,1,1,1,1,1,0,1,1,0,0,1,1,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,0,1,0,1,1],
+        "nignagpoliwag": [0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,1,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,0],
+        "siegemaximo": [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        "cannedsheep": [1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,0,1,0,0,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,0,0,1,0,1,1,1,0,0,1,1,0,0,1,1,0,1,1,1,1,1,0,0,1,0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1,0,1,0,1]
+    }
+
+    for s in summonerResponses.keys():
+        s2cRelavance[s] = dict()
+        i = 0
+        for champ in session.query(Champion).order_by(Champion.name):
+            if summonerResponses[s][i] == 1:
+                s2cRelavance[s][champ.championId] = True
+            else:
+                s2cRelavance[s][champ.championId] = False
+            i += 1
+
 
     nPrec = 0
     rPrec = 0
     avgPrec = 0
     auc = 0
-
-    for query in items:
+    for query in summonerResponses.keys():
+        summoner = idx.riot.getSummonerByName(query)[query]["id"]
         # print(query[1])
-        score_lst = rs.search(query[1])
+        champsRecommended = idx.champSuggestionByChampion(summoner)
+        if champsRecommended == -1:
+            continue
         # print(score_lst[0])
         relevance = []
-        for s in score_lst:
+        for c in champsRecommended:
             # print("\t" + db.lookupItem_byID(db.lookupItem_byURL(s[0]))[0])
-            if db.lookupItem_byID(db.lookupItem_byURL(s[0]))[0] == query[1]:
+            if s2cRelavance[query][c]:
                 relevance.append(True)
             else:
                 relevance.append(False)
@@ -112,28 +128,29 @@ def main():
         rPrec += rPrecision(relevance)
         avgPrec += avgPrecision(relevance)
         auc += areaUnderCurve(relevance)
-    nPrec /= len(items)
-    rPrec /= len(items)
-    avgPrec /= len(items)
-    auc /= len(items)
+    nPrec /= len(summonerResponses)
+    rPrec /= len(summonerResponses)
+    avgPrec /= len(summonerResponses)
+    auc /= len(summonerResponses)
 
-    print("Average Prec@10 ", nPrec)
-    print("Average Prec@R ", rPrec)
-    print("Average MAP ", avgPrec)
-    print("Average AUC ", auc)
+    print("Normal: ")
+    print("\tAverage Prec@10 ", nPrec)
+    print("\tAverage Prec@R ", rPrec)
+    print("\tAverage MAP ", avgPrec)
+    print("\tAverage AUC ", auc)
 
     return
 
 
 def random_test():
-    db = WebDB("data/cache.db")
+    idx = Index()
     nPrec = 0
     rPrec = 0
     avgPrec = 0
     auc = 0
     random_score = 0
 
-    N = len(db.execute("select * from CachedURL").fetchall())
+    N = len(idx.idx)
     relevance = []
     for s in range(0, N):
         if randint(0, 1) == 1:
@@ -145,11 +162,11 @@ def random_test():
     rPrec = rPrecision(relevance)
     avgPrec = avgPrecision(relevance)
     auc = areaUnderCurve(relevance)
-
-    print("Average Prec@10 ", nPrec)
-    print("Average Prec@R ", rPrec)
-    print("Average MAP ", avgPrec)
-    print("Average AUC ", auc)
+    print("Random: ")
+    print("\tAverage Prec@10 ", nPrec)
+    print("\tAverage Prec@R ", rPrec)
+    print("\tAverage MAP ", avgPrec)
+    print("\tAverage AUC ", auc)
 
 
 def test():
@@ -163,5 +180,18 @@ def test():
     print("AUC for A: " + str(areaUnderCurve(relevantA)))
     print("AUC for B: " + str(areaUnderCurve(relevantB)))
 
+engine = create_engine("sqlite:///data.db")
+
+# A DBSession() instance establishes all conversations with the database
+# and represents a "staging zone" for all the objects loaded into the
+# database session object. Any change made against the objects in the
+# session won't be persisted into the database until you call
+# session.commit(). If you're not happy about the changes, you can
+# revert all of them back to the last commit by calling
+# session.rollback()
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
+
+
 main()
-# random_test()
+random_test()

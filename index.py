@@ -34,14 +34,21 @@ class Index():
                         if s2c.deaths > 0:
                             #normalize = goodness/sum of goodness
                             goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
-                            if(goodness > 0):
-                                s2c.goodness = math.log10(goodness)
+                            if goodness > 0:
+                                if goodness > 1:
+                                    s2c.goodness = math.log10(goodness)
+                                else:
+                                    s2c.goodness = goodness
+
                             else:
                                 s2c.goodness = 0
                         else:
                             goodness = (((s2c.kills + .75 * s2c.assists) / 1) + .1*s2c.wins)/s2c.games
-                            if(goodness > 0):
-                                s2c.goodness = math.log10(goodness)
+                            if goodness > 0:
+                                if goodness > 1:
+                                    s2c.goodness = math.log10(goodness)
+                                else:
+                                    s2c.goodness = goodness
                             else:
                                 s2c.goodness = 0
 
@@ -114,7 +121,7 @@ class Index():
     def champSuggestionByChampion(self, summonerId):
         if summonerId not in self.idx:
             print("Can't find summoner in table.")
-            return
+            return -1
         print(self.idx[summonerId])
         temp = sorted(self.idx[summonerId].items(), key=operator.itemgetter(1))
         top3_champs = []
@@ -138,6 +145,7 @@ class Index():
                     print("\t\tChampion id: " + str(temp[i][0]))
                     print("\t\tScore: " + str(temp[i][1]))
                     break
+        return top3_recommendations
 
 
 
@@ -167,6 +175,7 @@ class Index():
                     print("\t\tChampion id: " + str(temp[i][0]))
                     print("\t\tScore: " + str(temp[i][1]))
                     break
+        return top3_recommendations
 
 
 def main():
@@ -200,4 +209,4 @@ engine = create_engine("sqlite:///data.db")
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-main()
+# main()
