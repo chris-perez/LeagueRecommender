@@ -23,7 +23,7 @@ class Index():
             for summoner in session.query(Summoner).all():
                 totalScore = 0
                 # number of test champions
-                if i > 600:
+                if i > 1000:
                     break
                 i += 1
                 self.idx[summoner.summonerId] = dict()
@@ -32,7 +32,6 @@ class Index():
                         s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()[0]
                         print("\tSummoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
                         if s2c.deaths > 0:
-                            #normalize = goodness/sum of goodness
                             goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
                             if goodness > 0:
                                 if goodness > 1:
@@ -118,68 +117,67 @@ class Index():
                         total = c1.defense*c2.defense + c1.magic*c2.magic + c1.attack*c2.attack
                     self.c2c[c1.championId][c2.championId] += total
 
-    def champSuggestionByChampion(self, summonerId):
+    def champSuggestionByChampion(self, summonerId, numResults=3):
         if summonerId not in self.idx:
-            print("Can't find summoner in table.")
+            # print("Can't find summoner in table.")
             return -1
-        print(self.idx[summonerId])
-        temp = sorted(self.idx[summonerId].items(), key=operator.itemgetter(1))
+        # print(self.idx[summonerId])
+        temp = sorted(self.idx[summonerId].items(), key=operator.itemgetter(1), reverse=True)
         top3_champs = []
-        print("Your Top 3 Champions: ")
-        for i in range(0, 3):
+        # print("Your Top 3 Champions: ")
+        for i in range(0, numResults):
             if i > len(self.idx[summonerId]) or self.idx[summonerId][temp[i][0]] == 0:
                 break
             top3_champs.append(temp[i][0])
-            print("\tName: " + session.query(Champion).filter(Champion.championId == top3_champs[i]).all()[0].name)
-            print("\t\tChampion id: " + str(top3_champs[i]))
+            # print("\tName: " + session.query(Champion).filter(Champion.championId == top3_champs[i]).all()[0].name)
+            # print("\t\tChampion id: " + str(top3_champs[i]))
+            # print("\t\tScore: " + str(self.idx[summonerId][temp[i][0]]))
 
         top3_recommendations = []
-        print("Your Top 3 Recommendations: ")
+        # print("Your Top 3 Recommendations: ")
         for champ in top3_champs:
             temp = sorted(self.c2c[champ].items(), key=operator.itemgetter(1), reverse=True)
             # print(temp)
             for i in range(0, len(temp)):
-                if self.idx[summonerId][temp[i][0]] == 0:
+                if self.idx[summonerId][temp[i][0]] == 0 and temp[i][0] not in top3_recommendations:
                     top3_recommendations.append(temp[i][0])
-                    print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
-                    print("\t\tChampion id: " + str(temp[i][0]))
-                    print("\t\tScore: " + str(temp[i][1]))
+                    # print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
+                    # print("\t\tChampion id: " + str(temp[i][0]))
+                    # print("\t\tScore: " + str(temp[i][1]))
                     break
         return top3_recommendations
 
-
-
-    def champSuggestionBySummoner(self, summonerId):
+    def champSuggestionBySummoner(self, summonerId, numResults=3):
         if summonerId not in self.idx:
-            print("Can't find summoner in table.")
-            return
-        print(self.idx[summonerId])
-        temp = sorted(self.s2s[summonerId].items(), key=operator.itemgetter(1))
+            # print("Can't find summoner in table.")
+            return -1
+        # print(self.idx[summonerId])
+        temp = sorted(self.s2s[summonerId].items(), key=operator.itemgetter(1), reverse=True)
         top3_summoners = []
-        print("Your Top 3 Summoners: ")
-        for i in range(0, 3):
+        # print("Your Top 3 Summoners: ")
+        for i in range(0, numResults):
             if i > len(self.s2s[summonerId]) or self.s2s[summonerId][temp[i][0]] == 0:
                 break
             top3_summoners.append(temp[i][0])
-            print("\tSummoner id: " + str(top3_summoners[i]))
+            # print("\tSummoner id: " + str(top3_summoners[i]))
 
         top3_recommendations = []
-        print("Your Top 3 Recommendations: ")
+        # print("Your Top 3 Recommendations: ")
         for summoner in top3_summoners:
             temp = sorted(self.idx[summoner].items(), key=operator.itemgetter(1), reverse=True)
             # print(temp)
             for i in range(0, len(temp)):
-                if self.idx[summonerId][temp[i][0]] == 0:
+                if self.idx[summonerId][temp[i][0]] == 0 and temp[i][0] not in top3_recommendations:
                     top3_recommendations.append(temp[i][0])
-                    print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
-                    print("\t\tChampion id: " + str(temp[i][0]))
-                    print("\t\tScore: " + str(temp[i][1]))
+                    # print("\tName: " + session.query(Champion).filter(Champion.championId == temp[i][0]).all()[0].name)
+                    # print("\t\tChampion id: " + str(temp[i][0]))
+                    # print("\t\tScore: " + str(temp[i][1]))
                     break
         return top3_recommendations
 
 
 def main():
-    index = Index(False, False)
+    index = Index(True, False)
     while (True):
         name = input("Enter a summoner name: ")
         summoner = index.riot.getSummonerByName(name)
@@ -210,3 +208,5 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # main()
+Index(True)
+Index(False)

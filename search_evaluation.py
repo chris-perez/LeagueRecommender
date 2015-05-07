@@ -73,11 +73,7 @@ def areaUnderCurve(relevance):
 
 
 def main():
-    print("Loading Index . . .")
-    idx = Index(True, True)
-    print("Index Loaded")
 
-    s2cRelavance = dict()
     summonerResponses = {
         "chrispychips5": [0,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,0,0,1,0,1,1,0,1,0,0,0,1,1,1,1,1,1,1,0,1,1,1,0,1,1,0,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,0,1,1,1,0,0,1,1,0,0,1,0,0,1,1,0,1,1,1,1,1,0,0,0,0,0,1,1,1,1,0,0,1,0,1,1,1,0,1,1,1,1,1],
         "frozenbastion": [0,0,0,1,1,1,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0,1,1,0,1,0,0,0,0,1,1,1,1,0,1,0,0,0,0,0,0,1,0,1,1,0,1,1,0,1,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,1,0,0,0,0,1,1,1,1,1,0,0,0,1,0,1,0,1,0,1,0,0,0,0,0,1,1,0,1,0,0,1,1,0,0,0,0,0,1,1,0],
@@ -89,7 +85,7 @@ def main():
         "siegemaximo": [1,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
         "cannedsheep": [1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,0,1,0,0,1,1,1,1,1,0,1,1,0,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,1,1,0,0,1,0,1,1,1,0,0,1,1,0,0,1,1,0,1,1,1,1,1,0,0,1,0,1,1,1,1,0,1,0,1,0,0,0,1,1,1,1,1,1,0,0,0,1,1,1,1,0,1,0,1,0,1]
     }
-
+    s2cRelavance = dict()
     for s in summonerResponses.keys():
         s2cRelavance[s] = dict()
         i = 0
@@ -100,21 +96,47 @@ def main():
                 s2cRelavance[s][champ.championId] = False
             i += 1
 
+    numResults = 15
+    print("No Normalization, Champion Based, Not Content Based")
+    idx = Index(False, False)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults)
+    print("No Normalization, Champion Based, Content Based")
+    idx = Index(False, True)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults)
+    print("Normalization, Champion Based, Not Content Based")
+    idx = Index(True, False)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults)
+    print("Normalization, Champion Based, Content Based")
+    idx = Index(True, True)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults)
 
+    numResults = 15
+    print("No Normalization, Summoner Based")
+    idx = Index(False, False)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults, True)
+    print("Normalization, Summoner Based")
+    idx = Index(True, False)
+    testRecommendations(idx, summonerResponses, s2cRelavance, numResults, True)
+    # random_test()
+
+def testRecommendations(idx, summonerResponses, s2cRelavance, numResults=3, bySummoner=False):
     nPrec = 0
     rPrec = 0
     avgPrec = 0
     auc = 0
+
     for query in summonerResponses.keys():
         summoner = idx.riot.getSummonerByName(query)[query]["id"]
         # print(query[1])
-        champsRecommended = idx.champSuggestionByChampion(summoner)
+        if bySummoner:
+            champsRecommended = idx.champSuggestionBySummoner(summoner, numResults)
+        else:
+            champsRecommended = idx.champSuggestionByChampion(summoner, numResults)
         if champsRecommended == -1:
             continue
         # print(score_lst[0])
         relevance = []
         for c in champsRecommended:
-            # print("\t" + db.lookupItem_byID(db.lookupItem_byURL(s[0]))[0])
             if s2cRelavance[query][c]:
                 relevance.append(True)
             else:
@@ -133,7 +155,6 @@ def main():
     avgPrec /= len(summonerResponses)
     auc /= len(summonerResponses)
 
-    print("Normal: ")
     print("\tAverage Prec@10 ", nPrec)
     print("\tAverage Prec@R ", rPrec)
     print("\tAverage MAP ", avgPrec)
@@ -150,7 +171,8 @@ def random_test():
     auc = 0
     random_score = 0
 
-    N = len(idx.idx)
+    # N = len(idx.idx)
+    N = 3
     relevance = []
     for s in range(0, N):
         if randint(0, 1) == 1:
@@ -194,4 +216,3 @@ session = DBSession()
 
 
 main()
-random_test()
