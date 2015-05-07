@@ -32,20 +32,20 @@ class Index():
                         s2c = session.query(SummonerToChampion).filter(SummonerToChampion.summonerId == summoner.id, SummonerToChampion.championId == champion.championId).all()[0]
                         print("\tSummoner %d: K= %d D= %d A= %d  Win: %d" % (s2c.summonerId, s2c.kills, s2c.deaths, s2c.assists, s2c.wins))
                         if s2c.deaths > 0:
-                            goodness = (((s2c.kills + .75 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
+                            goodness = (((s2c.kills + .8 * s2c.assists) / s2c.deaths) + .1*s2c.wins)/s2c.games
                             if goodness > 0:
                                 if goodness > 1:
-                                    s2c.goodness = math.log10(goodness)
+                                    s2c.goodness = math.log2(goodness)+1
                                 else:
                                     s2c.goodness = goodness
 
                             else:
                                 s2c.goodness = 0
                         else:
-                            goodness = (((s2c.kills + .75 * s2c.assists) / 1) + .1*s2c.wins)/s2c.games
+                            goodness = (((s2c.kills + .8 * s2c.assists) / 1) + .1*s2c.wins)/s2c.games
                             if goodness > 0:
                                 if goodness > 1:
-                                    s2c.goodness = math.log10(goodness)
+                                    s2c.goodness = math.log2(goodness)+1
                                 else:
                                     s2c.goodness = goodness
                             else:
@@ -188,9 +188,10 @@ def main():
 
         # My ID: 28866449
         print("Suggestion by Champion to Champion Similarity")
-        index.champSuggestionByChampion(summonerId)
+        index.champSuggestionByChampion(summonerId, 6)
         print("Suggestion by Summoner to Summoner Similarity")
-        index.champSuggestionBySummoner(summonerId)
+        index.champSuggestionBySummoner(summonerId, 6)
+        print("")
 
     # index.setGoodness()
 
@@ -208,5 +209,5 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # main()
-Index(True)
-Index(False)
+# Index(True)
+# Index(False)
